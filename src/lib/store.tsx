@@ -32,6 +32,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ),
       backend.on<number>("joe://net-calls", (n) => setBoot((b) => (b ? { ...b, netCalls: n } : b))),
       backend.on<Settings>("joe://settings-changed", (s) => setBoot((b) => (b ? { ...b, settings: s } : b))),
+      // Rust spots the moment Accessibility is switched on and starts the Option key.
+      backend.on<boolean>("joe://permissions", () => void refresh()),
     ];
     // Accessibility can be granted while the app is open; re-check when the window regains focus.
     const onFocus = () => void refresh();

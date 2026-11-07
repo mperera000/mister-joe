@@ -46,6 +46,9 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
   async function trySample() {
     setErr(null);
     setBusy("sample");
+    // Play the clip out loud while Joe transcribes it, so you hear what he's typing.
+    const clip = new Audio("/joe-sample.wav");
+    void clip.play().catch(() => {});
     try {
       const t = await backend.transcribeSample();
       await finish(t.raw, t.durationSeconds, t.model, "sample");

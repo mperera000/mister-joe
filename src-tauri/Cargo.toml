@@ -1,6 +1,6 @@
 [package]
 name = "mister-joe"
-version = "0.1.0"
+version = "0.1.1"
 description = "Mister Joe: dictation that stays on your device"
 authors = ["Mister Joe"]
 license = "MIT"
@@ -41,6 +41,7 @@ reqwest = { version = "0.13.5", default-features = false, features = ["json", "r
 
 [target.'cfg(target_os = "macos")'.dependencies]
 whisper-rs = { version = "0.16.0", features = ["metal"] }
+core-foundation = "0.10"
 
 [profile.release]
 codegen-units = 1

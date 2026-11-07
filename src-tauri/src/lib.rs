@@ -102,6 +102,35 @@ fn accessibility_granted() -> bool {
     }
 }
 
+#[cfg(target_os = "macos")]
+fn request_accessibility_prompt() -> bool {
+    use core_foundation::{base::TCFType, boolean::CFBoolean, dictionary::CFDictionary, string::CFString};
+    #[link(name = "ApplicationServices", kind = "framework")]
+    extern "C" {
+        fn AXIsProcessTrustedWithOptions(options: core_foundation::dictionary::CFDictionaryRef) -> bool;
+    }
+    let key = CFString::new("AXTrustedCheckOptionPrompt");
+    let options = CFDictionary::from_CFType_pairs(&[(key.as_CFType(), CFBoolean::true_value().as_CFType())]);
+    unsafe { AXIsProcessTrustedWithOptions(options.as_concrete_TypeRef()) }
+}
+
+/// Accessibility is usually granted while Joe is open. Watch for it, then start the
+/// Option-key listener and tell the screens, so nobody has to restart the app.
+fn watch_accessibility(app: &AppHandle) {
+    if accessibility_granted() {
+        return;
+    }
+    let app = app.clone();
+    thread::spawn(move || loop {
+        thread::sleep(Duration::from_millis(1500));
+        if accessibility_granted() {
+            start_hotkey(&app);
+            let _ = app.emit("joe://permissions", true);
+            break;
+        }
+    });
+}
+
 fn emit_phase(app: &AppHandle, phase: &'static str, message: Option<String>) {
     let _ = app.emit("joe://phase", PhaseEvent { phase, message });
 }
@@ -498,7 +527,13 @@ fn open_permission_settings(app: AppHandle, which: String) -> Result<(), String>
     #[cfg(target_os = "macos")]
     {
         if which == "accessibility" {
-            return handy_keys::open_accessibility_settings().map_err(|e| e.to_string());
+            // Asking with the prompt option makes macOS add this exact copy of Joe to the
+            // Accessibility list. Without it, a switch left on for an older build looks
+            // granted but doesn't count for this one.
+            if !request_accessibility_prompt() {
+                return handy_keys::open_accessibility_settings().map_err(|e| e.to_string());
+            }
+            return Ok(());
         }
         let url = "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone";
         return app.opener().open_url(url, None::<&str>).map_err(|e| e.to_string());
@@ -636,6 +671,7 @@ pub fn run() {
             });
             build_tray(app)?;
             start_hotkey(app.handle());
+            watch_accessibility(app.handle());
             // Warm up the speech model so the first dictation is quick.
             let handle = app.handle().clone();
             thread::spawn(move || {
