@@ -89,6 +89,17 @@ npm test                       # text cleanup rules
 cd src-tauri && cargo test     # audio, hotkey logic, history files, settings, polish request
 ```
 
+## QA results
+
+Seldon QA (Wren) ran all 4 cases in `seldon.yml` against Mister Joe 0.1.5 on 2026-11-07: **4/4 passed** ([run 5848c33a](https://app.seldon.com/experiments/5848c33a-f73f-469c-96bc-e12b93f48927)).
+
+| Case | Result |
+|---|---|
+| Trying the sample adds a cleaned-up transcript to history | Pass |
+| A dictionary fix changes what Joe types | Pass |
+| A snippet expands into longer text | Pass |
+| Privacy summary shows nothing leaves the computer by default | Pass |
+
 ## QA preview mode
 
 `npm run dev` serves Joe's screens at http://localhost:1420 in a normal browser. In a browser there's no speech engine, so "Try a sample" uses the real engine's output for the bundled sample clip, and the screen says it's a preview. `seldon.yml` holds the Seldon QA cases that run against it.
