@@ -11,8 +11,8 @@ export function Button({
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; icon?: ReactNode }) {
   const styles: Record<Variant, string> = {
-    primary: "bg-accent text-on-accent hover:brightness-110",
-    secondary: "bg-surface-2 text-ink hover:bg-line",
+    primary: "clay-btn bg-accent text-on-accent hover:brightness-110",
+    secondary: "clay-btn bg-surface text-ink hover:bg-surface-2",
     ghost: "bg-transparent text-ink hover:bg-surface-2",
     danger: "bg-transparent text-accent-ink hover:bg-accent-soft",
   };
@@ -62,7 +62,7 @@ export function TextField({
       </label>
       <input
         id={id}
-        className="h-10 rounded-[10px] border border-line bg-surface px-3 text-[15px] text-ink placeholder:text-muted/80 focus:border-accent focus:outline-none"
+        className="clay-well h-10 rounded-[12px] border border-line bg-bg px-3 text-[15px] text-ink placeholder:text-muted/80 focus:border-accent focus:outline-none"
         aria-invalid={error ? true : undefined}
         aria-describedby={hint || error ? `${id}-help` : undefined}
         {...rest}

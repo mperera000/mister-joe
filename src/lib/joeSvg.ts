@@ -37,7 +37,7 @@ function defs(id: string): string {
     <linearGradient id="${id}bill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ea5333"/><stop offset="1" stop-color="#a42a15"/></linearGradient>
     <linearGradient id="${id}tooth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e4d9cb"/></linearGradient>
     <linearGradient id="${id}jaw" x1="0" y1="0" x2="0" y2="1"><stop offset="0.55" stop-color="#8a5a48" stop-opacity="0"/><stop offset="1" stop-color="#8a5a48" stop-opacity="0.32"/></linearGradient>
-    <filter id="${id}clay" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <filter id="${id}clay" x="-30%" y="-8%" width="160%" height="116%" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="wob"/>
       <feDisplacementMap in="SourceGraphic" in2="wob" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="shape"/>
       <feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="3" result="noise"/>
@@ -139,12 +139,20 @@ function face(mood: JoeMood): string {
   return `${defs(id)}
   <clipPath id="${id}f"><path d="${HEAD}"/></clipPath>
   <g filter="url(#${id}clay)">
-    <g filter="url(#${id}sh)">
-      <ellipse cx="47" cy="128" rx="10" ry="13" fill="url(#${id}ear)"/>
-      <ellipse cx="153" cy="128" rx="10" ry="13" fill="url(#${id}ear)"/>
+    <g class="joe-waves joe-waves-left" fill="none" stroke="#c43a22" stroke-width="3" stroke-linecap="round">
+      <path d="M27 116 Q20 128 27 140"/><path d="M18 108 Q8 128 18 148"/>
     </g>
-    <ellipse cx="48.5" cy="129" rx="4.5" ry="7.5" fill="#c4704e" opacity="0.55"/>
-    <ellipse cx="151.5" cy="129" rx="4.5" ry="7.5" fill="#c4704e" opacity="0.55"/>
+    <g class="joe-waves joe-waves-right" fill="none" stroke="#c43a22" stroke-width="3" stroke-linecap="round">
+      <path d="M173 116 Q180 128 173 140"/><path d="M182 108 Q192 128 182 148"/>
+    </g>
+    <g class="joe-ear joe-ear-left" filter="url(#${id}sh)">
+      <ellipse cx="47" cy="128" rx="10" ry="13" fill="url(#${id}ear)"/>
+      <ellipse cx="48.5" cy="129" rx="4.5" ry="7.5" fill="#c4704e" opacity="0.55"/>
+    </g>
+    <g class="joe-ear joe-ear-right" filter="url(#${id}sh)">
+      <ellipse cx="153" cy="128" rx="10" ry="13" fill="url(#${id}ear)"/>
+      <ellipse cx="151.5" cy="129" rx="4.5" ry="7.5" fill="#c4704e" opacity="0.55"/>
+    </g>
     <path d="${HEAD}" fill="url(#${id}skin)" filter="url(#${id}big)"/>
     <g clip-path="url(#${id}f)">
       <path d="${HEAD}" fill="url(#${id}jaw)"/>
@@ -157,7 +165,7 @@ function face(mood: JoeMood): string {
     ${eyes(mood, id)}
     <path d="M100 141 C108.5 141 112 147 111.5 152.5 C111 158.5 106 160.5 100 160.5 C94 160.5 89 158.5 88.5 152.5 C88 147 91.5 141 100 141 Z" fill="url(#${id}nose)" filter="url(#${id}sh)"/>
     <ellipse cx="96.5" cy="147" rx="3" ry="2" fill="#ffffff" opacity="0.45"/>
-    ${mouth(mood, id)}
+    <g class="joe-mouth">${mouth(mood, id)}</g>
     ${cap(id)}
   </g>`;
 }
@@ -169,7 +177,7 @@ function face(mood: JoeMood): string {
 export function joeSvg(mood: JoeMood = "idle", opts: { tile?: boolean; title?: string } = {}): string {
   const title = opts.title ?? "Mister Joe";
   if (!opts.tile) {
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="29 37 142 150" role="img" aria-label="${title}"><title>${title}</title>${face(mood)}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="29 37 142 150" overflow="visible" role="img" aria-label="${title}"><title>${title}</title>${face(mood)}</svg>`;
   }
   const id = `tile${++uid}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="${title}"><title>${title}</title>

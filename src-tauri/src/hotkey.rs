@@ -5,6 +5,7 @@
 //! it's held cancels, so Option+E, Option-drag and friends keep working.
 
 use handy_keys::{Key, KeyboardListener, Modifiers};
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -12,6 +13,18 @@ use std::time::{Duration, Instant};
 use crate::settings::Settings;
 
 pub const HOLD_DELAY: Duration = Duration::from_millis(300);
+
+/// Which Option key started the current dictation: 0 unknown, 1 left, 2 right.
+/// The pill uses it to make Joe cup the ear on that side.
+static LAST_SIDE: AtomicU8 = AtomicU8::new(0);
+
+pub fn last_side() -> Option<&'static str> {
+    match LAST_SIDE.load(Ordering::Relaxed) {
+        1 => Some("left"),
+        2 => Some("right"),
+        _ => None,
+    }
+}
 const TAP_MAX: Duration = Duration::from_millis(400);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -112,6 +125,14 @@ pub fn spawn(settings: Arc<Mutex<Settings>>, on_action: impl Fn(Action) + Send +
                     Ok(ev) => match ev.changed_modifier {
                         Some(changed) if changed.intersects(target) => {
                             if ev.is_key_down {
+                                let side = if changed.intersects(Modifiers::OPT_RIGHT) {
+                                    2
+                                } else if changed.intersects(Modifiers::OPT_LEFT) {
+                                    1
+                                } else {
+                                    0
+                                };
+                                LAST_SIDE.store(side, Ordering::Relaxed);
                                 let ignore = target | Modifiers::OPT | Modifiers::FN;
                                 Input::TargetDown { others_held: !(ev.modifiers & !ignore).is_empty() }
                             } else {

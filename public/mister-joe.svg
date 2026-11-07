@@ -20,7 +20,7 @@
     <linearGradient id="joe2bill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ea5333"/><stop offset="1" stop-color="#a42a15"/></linearGradient>
     <linearGradient id="joe2tooth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e4d9cb"/></linearGradient>
     <linearGradient id="joe2jaw" x1="0" y1="0" x2="0" y2="1"><stop offset="0.55" stop-color="#8a5a48" stop-opacity="0"/><stop offset="1" stop-color="#8a5a48" stop-opacity="0.32"/></linearGradient>
-    <filter id="joe2clay" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <filter id="joe2clay" x="-30%" y="-8%" width="160%" height="116%" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="wob"/>
       <feDisplacementMap in="SourceGraphic" in2="wob" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="shape"/>
       <feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="3" result="noise"/>
@@ -37,12 +37,20 @@
   </defs>
   <clipPath id="joe2f"><path d="M52 106 C52 78 73 64 100 64 C127 64 148 78 148 106 L148 128 C148 160 127 181 100 181 C73 181 52 160 52 128 Z"/></clipPath>
   <g filter="url(#joe2clay)">
-    <g filter="url(#joe2sh)">
-      <ellipse cx="47" cy="128" rx="10" ry="13" fill="url(#joe2ear)"/>
-      <ellipse cx="153" cy="128" rx="10" ry="13" fill="url(#joe2ear)"/>
+    <g class="joe-waves joe-waves-left" fill="none" stroke="#c43a22" stroke-width="3" stroke-linecap="round">
+      <path d="M27 116 Q20 128 27 140"/><path d="M18 108 Q8 128 18 148"/>
     </g>
-    <ellipse cx="48.5" cy="129" rx="4.5" ry="7.5" fill="#c4704e" opacity="0.55"/>
-    <ellipse cx="151.5" cy="129" rx="4.5" ry="7.5" fill="#c4704e" opacity="0.55"/>
+    <g class="joe-waves joe-waves-right" fill="none" stroke="#c43a22" stroke-width="3" stroke-linecap="round">
+      <path d="M173 116 Q180 128 173 140"/><path d="M182 108 Q192 128 182 148"/>
+    </g>
+    <g class="joe-ear joe-ear-left" filter="url(#joe2sh)">
+      <ellipse cx="47" cy="128" rx="10" ry="13" fill="url(#joe2ear)"/>
+      <ellipse cx="48.5" cy="129" rx="4.5" ry="7.5" fill="#c4704e" opacity="0.55"/>
+    </g>
+    <g class="joe-ear joe-ear-right" filter="url(#joe2sh)">
+      <ellipse cx="153" cy="128" rx="10" ry="13" fill="url(#joe2ear)"/>
+      <ellipse cx="151.5" cy="129" rx="4.5" ry="7.5" fill="#c4704e" opacity="0.55"/>
+    </g>
     <path d="M52 106 C52 78 73 64 100 64 C127 64 148 78 148 106 L148 128 C148 160 127 181 100 181 C73 181 52 160 52 128 Z" fill="url(#joe2skin)" filter="url(#joe2big)"/>
     <g clip-path="url(#joe2f)">
       <path d="M52 106 C52 78 73 64 100 64 C127 64 148 78 148 106 L148 128 C148 160 127 181 100 181 C73 181 52 160 52 128 Z" fill="url(#joe2jaw)"/>
@@ -73,14 +81,14 @@
     </g></g>
     <path d="M100 141 C108.5 141 112 147 111.5 152.5 C111 158.5 106 160.5 100 160.5 C94 160.5 89 158.5 88.5 152.5 C88 147 91.5 141 100 141 Z" fill="url(#joe2nose)" filter="url(#joe2sh)"/>
     <ellipse cx="96.5" cy="147" rx="3" ry="2" fill="#ffffff" opacity="0.45"/>
-    <clipPath id="joe2m"><path d="M80 161Q100 167 120 159Q117 177 100 177Q83 177 80 161Z"/></clipPath>
+    <g class="joe-mouth"><clipPath id="joe2m"><path d="M80 161Q100 167 120 159Q117 177 100 177Q83 177 80 161Z"/></clipPath>
     <g fill="#c9775f" transform="translate(0 0.8)"><path d="M80 161Q100 167 120 159Q117 177 100 177Q83 177 80 161Z"/></g>
     <g fill="url(#joe2mouth)"><path d="M80 161Q100 167 120 159Q117 177 100 177Q83 177 80 161Z"/></g>
     <g clip-path="url(#joe2m)">
       <ellipse cx="100" cy="178" rx="10" ry="6.5" fill="#d9675a"/>
       <g filter="url(#joe2sh)"><rect x="93.2" y="160" width="6.4" height="8.5" rx="2" fill="url(#joe2tooth)"/>
          <rect x="100.4" y="160" width="6.4" height="8.5" rx="2" fill="url(#joe2tooth)"/></g>
-    </g>
+    </g></g>
     <g transform="rotate(-4 100 96)" filter="url(#joe2big)">
     <path d="M47 104 C46 64 70 45 100 45 C130 45 154 64 153 104 Z" fill="url(#joe2cap)"/>
     <path d="M100 48 C89 60 83 78 82 98 M100 48 C111 60 117 78 118 98" fill="none" stroke="#a42c17" stroke-width="1.8" stroke-linecap="round"/>

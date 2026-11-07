@@ -28,6 +28,7 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
   // "Try it here": the live state of a real hold-Option dictation into the practice box.
   const [phase, setPhase] = useState<Phase>("idle");
   const [phaseMsg, setPhaseMsg] = useState<string | null>(null);
+  const [side, setSide] = useState<"left" | "right" | null>(null);
   const [practice, setPractice] = useState("");
   const [optionMissed, setOptionMissed] = useState(false);
   const optionDown = useRef<{ at: number; spoiled: boolean } | null>(null);
@@ -40,6 +41,7 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
         setPhase(e.phase);
         setPhaseMsg(e.message);
         if (e.phase === "listening") {
+          setSide(e.side ?? null);
           sawListening.current = true;
           setOptionMissed(false);
           setResult(null);
@@ -121,7 +123,10 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-[auto_1fr] items-center gap-8">
-        <MisterJoe mood={mood} size={168} />
+        <div className="flex flex-col items-center">
+          <MisterJoe mood={mood} size={168} ear={phase === "listening" ? (side ?? "left") : null} level={level} />
+          <span aria-hidden className="joe-floor -mt-2 h-4 w-32 rounded-[50%]" />
+        </div>
         <div>
           <h1 className="text-[34px] font-extrabold leading-[1.08] tracking-tight">
             {settings.mode === "toggle" ? `Tap ${key}, talk, tap again.` : `Hold ${key} and talk.`}
@@ -140,7 +145,7 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
       </div>
 
       {isApp && (
-        <section aria-labelledby="practice-title" className="rounded-2xl border border-line bg-surface p-5">
+        <section aria-labelledby="practice-title" className="clay border border-line bg-surface p-5">
           <h2 id="practice-title" className="text-[19px] font-bold tracking-tight">
             Try it here
           </h2>
@@ -156,7 +161,7 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
             onKeyUp={onPracticeKeyUp}
             rows={3}
             placeholder={`Click here, then hold ${key} and talk`}
-            className="mt-3 w-full resize-none rounded-[10px] border border-line bg-bg px-3.5 py-3 text-[16px] leading-relaxed outline-none focus:border-accent"
+            className="clay-well mt-3 w-full resize-none rounded-[12px] border border-line bg-bg px-3.5 py-3 text-[16px] leading-relaxed outline-none focus:border-accent"
           />
           <div aria-live="polite" className="mt-2 min-h-6 text-[14.5px]">
             <PracticeStatus
@@ -186,7 +191,7 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-2xl border border-line bg-surface p-5"
+            className="clay border border-line bg-surface p-5"
           >
             <div className="grid gap-5 md:grid-cols-2">
               <div>
@@ -223,7 +228,7 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
       </AnimatePresence>
 
       {needsSetup && (
-        <section aria-labelledby="setup-title" className="rounded-2xl border border-line bg-surface p-6">
+        <section aria-labelledby="setup-title" className="clay border border-line bg-surface p-6">
           <h2 id="setup-title" className="text-[19px] font-bold tracking-tight">
             One quick step
           </h2>

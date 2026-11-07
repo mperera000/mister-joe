@@ -13,6 +13,7 @@ export default function PillView() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [level, setLevel] = useState(0);
+  const [side, setSide] = useState<"left" | "right" | null>(null);
   const boot = useRef<Bootstrap | null>(null);
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function PillView() {
       backend.on<PhaseEvent>("joe://phase", (e) => {
         setPhase(e.phase);
         setMessage(e.message);
+        if (e.phase === "listening") setSide(e.side ?? null);
         if (e.phase !== "listening") setLevel(0);
       }),
       backend.on<number>("joe://level", setLevel),
@@ -41,61 +43,41 @@ export default function PillView() {
   const toggle = boot.current?.settings.mode === "toggle";
   const mood: JoeMood = phase === "listening" ? "listening" : phase === "thinking" ? "thinking" : phase === "done" ? "happy" : "idle";
 
-  const titles: Record<Phase, string> = {
-    idle: "Mister Joe",
-    listening: "Listening",
-    thinking: "Writing it down",
-    done: "Typed it",
-    copied: "Copied",
-    nothing: "Didn't catch that",
-    error: "Hmm",
-  };
-  const sub =
+  // Tiny Joe, no capsule. While listening he says nothing: the big ear on the side
+  // of the Option key you're holding, the sound waves and his moving mouth say it.
+  // Otherwise a small speech bubble under him explains what's happening.
+  const bubble: { icon?: "done" | "warn"; text: string } | null =
     phase === "listening"
       ? toggle
-        ? `Tap ${key} to finish`
-        : `Let go of ${key} to finish`
-      : phase === "error" || phase === "copied"
-        ? message
-        : phase === "nothing"
-          ? "Hold a little longer and speak up"
-          : null;
+        ? { text: `Tap ${key} to finish` }
+        : null
+      : phase === "thinking"
+        ? { text: "Writing it down" }
+        : phase === "done"
+          ? { icon: "done", text: "Typed it" }
+          : phase === "copied"
+            ? { icon: "done", text: message ?? "Copied" }
+            : phase === "nothing"
+              ? { text: "Didn't catch that. Hold a little longer." }
+              : phase === "error"
+                ? { icon: "warn", text: message ?? "Something went wrong" }
+                : null;
 
   return (
-    <div className="flex h-full items-center justify-center p-2">
-      <div
-        role="status"
-        aria-live="polite"
-        className="flex h-[68px] w-full items-center gap-3 rounded-full bg-joe pr-5 pl-2 text-[#f4f2ef] shadow-[0_10px_30px_rgba(20,18,30,0.35)]"
-      >
-        <div className="flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-[#3a3944]">
-          <MisterJoe mood={mood} size={44} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-[15px] font-bold">
-            {phase === "done" && <Check size={16} weight="bold" className="text-[#7fdca4]" />}
-            {phase === "error" && <Warning size={16} weight="fill" className="text-[#ffb199]" />}
-            {titles[phase]}
-            {phase === "thinking" && <Dots />}
-          </div>
-          {sub && <div className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-[#c9c7d1]">{sub}</div>}
-        </div>
-        {phase === "listening" && <Bars level={level} />}
+    <div role="status" aria-live="polite" className="flex h-full flex-col items-center justify-end pb-3">
+      <span className="sr-only">{phase === "listening" ? "Listening" : (bubble?.text ?? "")}</span>
+      <div className="relative flex flex-col items-center">
+        <MisterJoe mood={mood} size={62} ear={phase === "listening" ? (side ?? "left") : null} level={level} />
+        <span aria-hidden className="pill-shadow -mt-1 h-2.5 w-12 rounded-[50%]" />
       </div>
-    </div>
-  );
-}
-
-function Bars({ level }: { level: number }) {
-  return (
-    <div aria-hidden className="flex h-8 items-center gap-[3px]">
-      {[0.55, 0.85, 1, 0.75, 0.5].map((w, i) => (
-        <span
-          key={i}
-          className="w-[4px] rounded-full bg-[#ff7a5c] transition-[height] duration-75"
-          style={{ height: `${Math.max(18, Math.min(100, level * w * 140))}%` }}
-        />
-      ))}
+      {bubble && (
+        <div className="pill-bubble mt-1.5 flex max-w-[290px] items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold leading-snug">
+          {bubble.icon === "done" && <Check size={14} weight="bold" className="shrink-0 text-ok" />}
+          {bubble.icon === "warn" && <Warning size={14} weight="fill" className="shrink-0 text-accent" />}
+          <span className="line-clamp-2">{bubble.text}</span>
+          {phase === "thinking" && <Dots />}
+        </div>
+      )}
     </div>
   );
 }
@@ -106,7 +88,7 @@ function Dots() {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="h-[5px] w-[5px] rounded-full bg-[#c9c7d1] motion-safe:animate-bounce"
+          className="h-[4px] w-[4px] rounded-full bg-muted motion-safe:animate-bounce"
           style={{ animationDelay: `${i * 120}ms` }}
         />
       ))}

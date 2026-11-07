@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Mister Joe",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "identifier": "app.misterjoe.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -27,8 +27,8 @@
         "label": "pill",
         "title": "Mister Joe is listening",
         "url": "pill.html",
-        "width": 300,
-        "height": 84,
+        "width": 320,
+        "height": 150,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,

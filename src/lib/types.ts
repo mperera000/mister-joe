@@ -62,6 +62,8 @@ export type Phase = "idle" | "listening" | "thinking" | "done" | "copied" | "not
 export interface PhaseEvent {
   phase: Phase;
   message: string | null;
+  /** While listening: which Option key is held, so Joe cups that ear. */
+  side?: "left" | "right" | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {

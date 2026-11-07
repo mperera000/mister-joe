@@ -3,44 +3,54 @@
 @import "@fontsource-variable/geist-mono";
 
 /*
-  Mister Joe tokens. One accent (ketchup red, Joe's cap) on cool neutrals.
-  Shape rule: buttons and chips are full pills, cards are 16px, inputs are 10px.
+  Mister Joe tokens: a warm stop-motion set. Clay-toned neutrals (light and dark,
+  following the Mac), one accent (ketchup red, Joe's cap), a fine paper grain,
+  and soft sculpted depth on cards and buttons.
+  Shape rule: buttons and chips are full pills, cards are 18px, inputs are 12px.
 */
 :root {
-  --bg: #f2f3f5;
-  --surface: #fbfbfc;
-  --surface-2: #e8e9ed;
-  --ink: #1d1c22;
-  --muted: #565864;
-  --line: #d9dae1;
+  --bg: #f3ece4;
+  --surface: #fbf7f2;
+  --surface-2: #ebe1d6;
+  --ink: #2a211c;
+  --muted: #6c5f56;
+  --line: #e0d3c5;
   --accent: #c43a22;
   --accent-ink: #a52f1b;
-  --on-accent: #fff8f6;
-  --accent-soft: #fbe4de;
-  --ok: #2c7a4b;
-  --ok-soft: #dff1e6;
-  --warn: #8a5a00;
-  --warn-soft: #fbf0d6;
+  --on-accent: #fff8f4;
+  --accent-soft: #f7dcd2;
+  --ok: #2f7a4c;
+  --ok-soft: #dcefe1;
+  --warn: #85560a;
+  --warn-soft: #f6e7c9;
   --joe-ink: #2b2a33;
+  --clay-hi: rgba(255, 255, 255, 0.7);
+  --clay-shade: rgba(92, 52, 30, 0.07);
+  --clay-drop: rgba(92, 52, 30, 0.22);
+  --grain-opacity: 0.4;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #17171b;
-    --surface: #202026;
-    --surface-2: #2a2a31;
-    --ink: #f0f0f3;
-    --muted: #a6a7b2;
-    --line: #34343d;
+    --bg: #1b1714;
+    --surface: #25201c;
+    --surface-2: #322a25;
+    --ink: #f4ebe2;
+    --muted: #b3a597;
+    --line: #3b322c;
     --accent: #ff7a5c;
-    --accent-ink: #ff8f75;
-    --on-accent: #1b1a1f;
-    --accent-soft: #3b2420;
-    --ok: #6fd39a;
-    --ok-soft: #1d3327;
-    --warn: #f3c56b;
-    --warn-soft: #3a3020;
+    --accent-ink: #ff9378;
+    --on-accent: #1d1714;
+    --accent-soft: #3d2620;
+    --ok: #78d39f;
+    --ok-soft: #1f3327;
+    --warn: #f0c26c;
+    --warn-soft: #3a2f1f;
+    --clay-hi: rgba(255, 240, 225, 0.06);
+    --clay-shade: rgba(0, 0, 0, 0.25);
+    --clay-drop: rgba(0, 0, 0, 0.55);
+    --grain-opacity: 0.25;
     color-scheme: dark;
   }
 }
@@ -73,13 +83,54 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 600px at 20% -10%, color-mix(in oklab, var(--surface) 70%, transparent), transparent 70%),
+    var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Fine paper grain over the whole window, like a stop-motion set. */
+html:not(.pill) body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.45  0 0 0 0 0.4  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Sculpted depth: a lit top edge, a soft underside and a drop shadow. */
+.clay {
+  border-radius: 18px;
+  box-shadow:
+    inset 0 1px 0 var(--clay-hi),
+    inset 0 -2px 0 var(--clay-shade),
+    0 1px 2px var(--clay-shade),
+    0 12px 28px -14px var(--clay-drop);
+}
+.clay-btn {
+  box-shadow:
+    inset 0 1px 0 var(--clay-hi),
+    inset 0 -2px 0 var(--clay-shade),
+    0 4px 10px -4px var(--clay-drop);
+}
+.clay-btn:active {
+  box-shadow:
+    inset 0 2px 3px var(--clay-shade),
+    0 1px 2px var(--clay-shade);
+}
+.clay-well {
+  box-shadow: inset 0 2px 4px var(--clay-shade);
+}
+.joe-floor {
+  background: radial-gradient(closest-side, var(--clay-drop), transparent);
 }
 
 textarea,
@@ -107,9 +158,59 @@ input,
   96% { transform: scaleY(0.12); }
 }
 
-/* The pill window is transparent around the capsule. */
+/*
+  Lively Joe. The SVG is drawn once per mood; these hooks animate it cheaply.
+  [data-ear] grows the ear on the side of the Option key being held, with sound
+  waves next to it. --joe-level (0..1, the mic level) opens his mouth as you talk.
+*/
+.joe .joe-ear,
+.joe .joe-waves,
+.joe .joe-mouth {
+  transform-box: fill-box;
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 180ms ease;
+}
+.joe .joe-ear-left { transform-origin: right center; }
+.joe .joe-ear-right { transform-origin: left center; }
+.joe .joe-waves { opacity: 0; }
+.joe[data-ear="left"] .joe-ear-left,
+.joe[data-ear="right"] .joe-ear-right {
+  transform: scale(1.75) rotate(var(--joe-ear-tilt, 0deg));
+}
+.joe[data-ear="left"] .joe-ear-left { --joe-ear-tilt: -8deg; }
+.joe[data-ear="right"] .joe-ear-right { --joe-ear-tilt: 8deg; }
+.joe[data-ear="left"] .joe-waves-left,
+.joe[data-ear="right"] .joe-waves-right {
+  opacity: calc(0.35 + var(--joe-level, 0) * 0.65);
+}
+.joe-talk .joe-mouth {
+  transform-origin: center top;
+  transform: scaleY(calc(0.6 + var(--joe-level, 0) * 1.1));
+  transition: transform 70ms linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .joe .joe-ear,
+  .joe .joe-waves,
+  .joe .joe-mouth {
+    transition: none;
+  }
+}
+
+/* The pill window is transparent around tiny Joe. */
 html.pill,
 html.pill body,
 html.pill #root {
   background: transparent;
+}
+
+/* Pill: tiny Joe stands on a soft contact shadow; the bubble is a small clay chip. */
+.pill-shadow {
+  background: radial-gradient(closest-side, rgba(40, 24, 18, 0.35), transparent);
+}
+.pill-bubble {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 6px 18px rgba(60, 30, 20, 0.22),
+    0 1px 2px rgba(60, 30, 20, 0.2);
 }

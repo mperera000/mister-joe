@@ -21,7 +21,7 @@ export default function App() {
 
   return (
     <div className="flex h-full">
-      <aside className="flex w-[212px] shrink-0 flex-col border-r border-line bg-surface px-3 pt-5 pb-4">
+      <aside className="flex w-[212px] shrink-0 flex-col border-r border-line bg-surface/70 px-3 pt-5 pb-4">
         <div className="mb-6 flex items-center gap-2.5 px-2">
           <MisterJoe size={34} label="Mister Joe logo" />
           <span className="text-[19px] font-extrabold tracking-tight">Mister Joe</span>
@@ -34,7 +34,7 @@ export default function App() {
               onClick={() => setScreen(id)}
               aria-current={screen === id ? "page" : undefined}
               className={`flex h-10 items-center gap-3 rounded-full px-3 text-[15px] font-semibold transition ${
-                screen === id ? "bg-accent-soft text-accent-ink" : "text-muted hover:bg-surface-2 hover:text-ink"
+                screen === id ? "clay-btn bg-surface text-accent-ink" : "text-muted hover:bg-surface-2 hover:text-ink"
               }`}
             >
               <Icon size={19} weight={screen === id ? "fill" : "regular"} />

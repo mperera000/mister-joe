@@ -116,7 +116,7 @@ export function HistoryScreen() {
           </p>
         </div>
       ) : (
-        <ul aria-label="Dictations" className="mt-6 divide-y divide-line rounded-2xl border border-line bg-surface">
+        <ul aria-label="Dictations" className="mt-6 divide-y divide-line clay border border-line bg-surface">
           {shown.map((e) => (
             <li key={e.id} className="group flex gap-4 px-5 py-4">
               <div className="min-w-0 flex-1">

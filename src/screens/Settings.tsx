@@ -154,7 +154,7 @@ export function SettingsScreen() {
       <PolishSection />
 
       <Section title="Privacy" id="privacy">
-        <div aria-label="Privacy summary" className="rounded-2xl border border-line bg-surface p-5">
+        <div aria-label="Privacy summary" className="clay border border-line bg-surface p-5">
           <div className="flex items-center gap-2 text-[17px] font-bold">
             <ShieldCheck size={22} weight="fill" className="text-ok" />
             {settings.polishEnabled ? "Only polished text leaves this computer" : "Nothing leaves this computer"}
@@ -224,7 +224,7 @@ function PairEditor({
   return (
     <div>
       {pairs.length > 0 && (
-        <ul aria-label={listLabel} className="mb-4 divide-y divide-line rounded-2xl border border-line bg-surface">
+        <ul aria-label={listLabel} className="mb-4 divide-y divide-line clay border border-line bg-surface">
           {pairs.map(([f, t], i) => (
             <li key={`${f}-${i}`} className="flex items-center gap-3 px-4 py-2.5">
               <span className="min-w-0 flex-1 truncate">{f}</span>
