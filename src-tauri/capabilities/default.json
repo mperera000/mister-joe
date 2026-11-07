@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Mister Joe's screens can call the app's own commands and listen to its events. Nothing else.",
+  "windows": ["main", "pill"],
+  "permissions": ["core:default"]
+}

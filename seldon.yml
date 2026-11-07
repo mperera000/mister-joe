@@ -1,0 +1,46 @@
+# Seldon (Wren) QA cases for Mister Joe.
+# Mister Joe is a desktop app. Its screens also run in a browser in "preview mode"
+# (speech simulated with the real engine's output for the bundled sample clip), so
+# Wren can test them locally through Seldon's temporary tunnel:
+#   npm run dev            # serves the screens at http://localhost:1420
+#   seldon validate
+#   seldon run --url http://localhost:1420
+run:
+  url: http://localhost:1420
+  credentials: none
+
+testCases:
+  - name: Trying the sample adds a cleaned-up transcript to history
+    steps:
+      - go to /
+      - click the "Try a sample" button
+      - wait for the "Joe typed" result to appear
+      - open History from the left sidebar
+    criteria: the newest history entry contains "remind me to send the budget to Priya by Friday" and does not contain the word "um"
+
+  - name: A dictionary fix changes what Joe types
+    steps:
+      - go to /
+      - open Settings from the left sidebar
+      - in the Dictionary section, type "Mr. Joe" in "When Joe hears" and "Mister Joe" in "Type this instead"
+      - click "Add fix"
+      - open Home from the left sidebar
+      - click the "Try a sample" button
+    criteria: the "Joe typed" text says "Mister Joe" and does not contain "Mr. Joe"
+
+  - name: A snippet expands into longer text
+    steps:
+      - go to /
+      - open Settings from the left sidebar
+      - in the Snippets section, type "my email" in "When you say" and "joe@example.com" in "Joe types"
+      - click "Add snippet"
+      - open Home from the left sidebar
+      - click the "Try a sample" button
+    criteria: the "Joe typed" text contains "joe@example.com"
+
+  - name: Privacy summary shows nothing leaves the computer by default
+    steps:
+      - go to /
+      - open Settings from the left sidebar
+      - scroll to the Privacy section
+    criteria: the Privacy section says "Nothing leaves this computer", shows 0 network calls this session, and shows AI polish as Off

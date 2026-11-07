@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Rust / Tauri build output
+src-tauri/target/
+src-tauri/gen/
+
+# Speech models are downloaded by scripts/fetch-models.sh (too big for git)
+src-tauri/resources/models/*.bin
+src-tauri/resources/models/*.part
+
+# Generated icon intermediates
+src-tauri/icons/source-1024.png
+release/

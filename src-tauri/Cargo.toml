@@ -1,0 +1,49 @@
+[package]
+name = "mister-joe"
+version = "0.1.0"
+description = "Mister Joe: dictation that stays on your device"
+authors = ["Mister Joe"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.85"
+
+[lib]
+name = "mister_joe_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.4", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.5", features = ["tray-icon", "macos-private-api", "image-png"] }
+tauri-plugin-opener = "2.7.2"
+tauri-plugin-dialog = "2.8.4"
+tauri-plugin-single-instance = "2.5.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+log = "0.4"
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "6"
+# Speech to text (whisper.cpp). GPU acceleration is added per platform below.
+whisper-rs = "0.16.0"
+# Microphone capture (conversion to 16 kHz is done in audio.rs).
+cpal = "0.18.2"
+hound = "3.5.1"
+# Paste into the active app and restore the clipboard.
+arboard = "3.7.0"
+enigo = "0.6.1"
+# Hold-Option / hold-Alt hotkey (modifier-only).
+handy-keys = "0.3.4"
+# Optional polish with the user's own Claude key. Key lives in the OS password store.
+keyring = { version = "3.6.3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "http2", "blocking"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+whisper-rs = { version = "0.16.0", features = ["metal"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+strip = true
