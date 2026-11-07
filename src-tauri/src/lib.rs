@@ -267,6 +267,7 @@ fn start_dictation(app: &AppHandle) {
     let level_app = app.clone();
     match audio::start(move |level| {
         let _ = level_app.emit_to("pill", "joe://level", level);
+        let _ = level_app.emit_to("main", "joe://level", level);
     }) {
         Ok(rec) => {
             *slot = Some(rec);
@@ -368,12 +369,12 @@ fn mic_blocked_message() -> String {
 
 fn finalize(app: &AppHandle, id: u64, text: String, polished: bool) -> Result<Option<history::Entry>, String> {
     let state = app.state::<AppState>();
-    let (duration, model) = {
+    let (duration, model, raw) = {
         let mut pending = state.pending.lock().unwrap();
         match pending.as_mut() {
             Some(p) if p.id == id && !p.done => {
                 p.done = true;
-                (p.duration, p.model.clone())
+                (p.duration, p.model.clone(), p.raw.clone())
             }
             _ => return Ok(None), // already handled
         }
@@ -389,6 +390,8 @@ fn finalize(app: &AppHandle, id: u64, text: String, polished: bool) -> Result<Op
         ),
     }
     hide_pill_after(app, if outcome == paste::Outcome::Pasted { 700 } else { 2500 });
+    // The Home screen's "Try it here" box shows what Joe heard next to what he typed.
+    let _ = app.emit_to("main", "joe://dictated", serde_json::json!({ "raw": raw, "text": text, "polished": polished }));
     save_to_history(app, &s, &text, duration, &model, polished, "dictation")
 }
 
