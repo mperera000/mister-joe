@@ -114,6 +114,29 @@ fn request_accessibility_prompt() -> bool {
     unsafe { AXIsProcessTrustedWithOptions(options.as_concrete_TypeRef()) }
 }
 
+/// Ask macOS for the microphone the official way (AVCaptureDevice). Recording with
+/// CoreAudio alone doesn't reliably show the "Allow microphone" question, which left
+/// Joe out of the Microphone list after a permission reset.
+#[cfg(target_os = "macos")]
+fn request_microphone() {
+    use block2::RcBlock;
+    use objc2::msg_send;
+    use objc2::runtime::{AnyClass, Bool};
+    use objc2_foundation::NSString;
+    #[link(name = "AVFoundation", kind = "framework")]
+    extern "C" {}
+    let Some(cls) = AnyClass::get(c"AVCaptureDevice") else { return };
+    let audio = NSString::from_str("soun"); // AVMediaTypeAudio
+    unsafe {
+        let status: isize = msg_send![cls, authorizationStatusForMediaType: &*audio];
+        if status == 0 {
+            // 0 = not asked yet: this shows the macOS question.
+            let done = RcBlock::new(|_granted: Bool| {});
+            let _: () = msg_send![cls, requestAccessForMediaType: &*audio, completionHandler: &*done];
+        }
+    }
+}
+
 /// Accessibility is usually granted while Joe is open. Watch for it, then start the
 /// Option-key listener and tell the screens, so nobody has to restart the app.
 fn watch_accessibility(app: &AppHandle) {
@@ -675,6 +698,8 @@ pub fn run() {
             build_tray(app)?;
             start_hotkey(app.handle());
             watch_accessibility(app.handle());
+            #[cfg(target_os = "macos")]
+            request_microphone();
             // Warm up the speech model so the first dictation is quick.
             let handle = app.handle().clone();
             thread::spawn(move || {
@@ -715,6 +740,17 @@ pub fn run() {
             show_main,
             restart_hotkey,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Mister Joe");
+        .build(tauri::generate_context!())
+        .expect("error while running Mister Joe")
+        .run(|_app, event| {
+            if let tauri::RunEvent::Exit = event {
+                // whisper.cpp's Metal backend aborts in its cleanup code at exit, which
+                // made macOS show "Mister Joe quit unexpectedly" on every quit. Settings
+                // and history are already on disk, so leave without that cleanup.
+                extern "C" {
+                    fn _exit(code: i32) -> !;
+                }
+                unsafe { _exit(0) }
+            }
+        });
 }

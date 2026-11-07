@@ -2576,6 +2576,7 @@ version = "0.1.3"
 dependencies = [
  "anyhow",
  "arboard",
+ "block2",
  "chrono",
  "core-foundation 0.10.1",
  "cpal",
@@ -2585,6 +2586,8 @@ dependencies = [
  "hound",
  "keyring",
  "log",
+ "objc2",
+ "objc2-foundation",
  "reqwest",
  "serde",
  "serde_json",
