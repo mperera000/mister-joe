@@ -120,6 +120,9 @@ fn watch_accessibility(app: &AppHandle) {
     if accessibility_granted() {
         return;
     }
+    // Like Momito: ask at launch, which also registers this exact build in the list.
+    #[cfg(target_os = "macos")]
+    request_accessibility_prompt();
     let app = app.clone();
     thread::spawn(move || loop {
         thread::sleep(Duration::from_millis(1500));

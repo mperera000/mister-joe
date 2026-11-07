@@ -30,6 +30,8 @@ Download the installer for your computer from the [Releases](../../releases) pag
 2. Open it. Joe isn't notarized by Apple yet, so macOS says it "could not verify" the app. Click **Done**.
 3. Go to **System Settings > Privacy & Security**, scroll down to the message about Mister Joe and click **Open Anyway**. You only do this once.
 
+**Updating:** replace the app in Applications. If holding Option stops working, open System Settings > Privacy & Security > Accessibility, select Mister Joe, click **–**, then open Joe again and switch it back on. macOS ties the switch to each version.
+
 (Right-click > Open no longer skips this check on macOS 15 and later. If you're comfortable in Terminal, `xattr -dr com.apple.quarantine "/Applications/Mister Joe.app"` does the same thing.)
 
 ### Windows
@@ -77,6 +79,8 @@ npm install
 npm run tauri dev              # run the app
 npm run tauri build            # make an installer for this computer
 ```
+
+To install your own build into Applications, run `./scripts/install-mac.sh`. Each unsigned build has a new signature, and macOS ties the Accessibility switch to it, so the script clears Joe's old switch when the build changed. Switch Joe on again when macOS asks.
 
 Tests:
 
