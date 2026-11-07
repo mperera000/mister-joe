@@ -91,7 +91,10 @@ cd src-tauri && cargo test     # audio, hotkey logic, history files, settings, p
 
 ## QA results
 
-Seldon QA (Wren) ran all 4 cases in `seldon.yml` against Mister Joe 0.1.5 on 2026-11-07: **4/4 passed** ([run 5848c33a](https://app.seldon.com/experiments/5848c33a-f73f-469c-96bc-e12b93f48927)).
+Seldon QA (Wren) ran all 4 cases in `seldon.yml` on 2026-11-07:
+
+- **Final build, Mister Joe 0.1.7: 4/4 passed** ([run 13eabdab](https://app.seldon.com/experiments/13eabdab-ce2c-4a9a-8729-576c684cd821))
+- First run, 0.1.5: 4/4 passed ([run 5848c33a](https://app.seldon.com/experiments/5848c33a-f73f-469c-96bc-e12b93f48927))
 
 | Case | Result |
 |---|---|
