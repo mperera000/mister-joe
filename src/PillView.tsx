@@ -63,18 +63,19 @@ export default function PillView() {
                 ? { icon: "warn", text: message ?? "Something went wrong" }
                 : null;
 
+  // Kept small on purpose, so Joe never covers the text field you're typing in:
+  // tiny Joe on a soft glow disc, and a message beside him only when needed.
   return (
-    <div role="status" aria-live="polite" className="flex h-full flex-col items-center justify-end pb-3">
+    <div role="status" aria-live="polite" className="flex h-full items-center justify-center gap-0.5">
       <span className="sr-only">{phase === "listening" ? "Listening" : (bubble?.text ?? "")}</span>
-      <div className="relative flex flex-col items-center">
-        <MisterJoe mood={mood} size={62} ear={phase === "listening" ? (side ?? "left") : null} level={level} />
-        <span aria-hidden className="pill-shadow -mt-1 h-2.5 w-12 rounded-[50%]" />
+      <div className="pill-glow relative flex h-[78px] w-[78px] shrink-0 items-center justify-center rounded-full">
+        <MisterJoe mood={mood} size={44} ear={phase === "listening" ? (side ?? "left") : null} level={level} />
       </div>
       {bubble && (
-        <div className="pill-bubble mt-1.5 flex max-w-[290px] items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold leading-snug">
+        <div className="pill-bubble flex max-w-[250px] items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold leading-snug">
           {bubble.icon === "done" && <Check size={14} weight="bold" className="shrink-0 text-ok" />}
           {bubble.icon === "warn" && <Warning size={14} weight="fill" className="shrink-0 text-accent" />}
-          <span className="line-clamp-2">{bubble.text}</span>
+          <span className={`line-clamp-2 ${bubble.icon === "warn" ? "font-bold text-accent-ink" : ""}`}>{bubble.text}</span>
           {phase === "thinking" && <Dots />}
         </div>
       )}

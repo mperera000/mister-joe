@@ -56,8 +56,11 @@ export default function App() {
 
       <main className="min-w-0 flex-1 overflow-y-auto">
         {backend.kind === "preview" && (
-          <div role="note" className="border-b border-line bg-warn-soft px-8 py-2.5 text-[14px] text-warn">
-            Preview mode: these are Mister Joe's real screens, but speech is simulated. Download the app to dictate.
+          <div role="note" className="flex items-center gap-2.5 border-b border-line bg-accent-soft px-8 py-2 text-[14px] text-accent-ink">
+            <MisterJoe size={26} label="" />
+            <span>
+              <strong>Preview.</strong> Joe's real screens with simulated speech. Download the app to dictate.
+            </span>
           </div>
         )}
         {error && (

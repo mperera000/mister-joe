@@ -62,7 +62,7 @@ export function TextField({
       </label>
       <input
         id={id}
-        className="clay-well h-10 rounded-[12px] border border-line bg-bg px-3 text-[15px] text-ink placeholder:text-muted/80 focus:border-accent focus:outline-none"
+        className="clay-well h-10 rounded-[12px] border border-line bg-bg px-3 text-[15px] text-ink placeholder:text-muted focus:border-accent focus:outline-none"
         aria-invalid={error ? true : undefined}
         aria-describedby={hint || error ? `${id}-help` : undefined}
         {...rest}

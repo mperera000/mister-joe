@@ -236,11 +236,13 @@ fn show_pill(app: &AppHandle) {
     if let Ok(Some(m)) = pill.primary_monitor() {
         let scale = m.scale_factor();
         let (mw, mh) = (m.size().width as f64, m.size().height as f64);
-        let (w, h) = (320.0 * scale, 150.0 * scale);
+        let (w, h) = (340.0 * scale, 96.0 * scale);
         let x = m.position().x as f64 + (mw - w) / 2.0;
-        let y = m.position().y as f64 + mh - h - 60.0 * scale;
+        let y = m.position().y as f64 + mh - h - 40.0 * scale;
         let _ = pill.set_position(PhysicalPosition::new(x as i32, y as i32));
     }
+    // Clicks pass straight through to whatever is underneath the pill.
+    let _ = pill.set_ignore_cursor_events(true);
     let _ = pill.show();
 }
 

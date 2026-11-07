@@ -81,6 +81,12 @@ body,
   height: 100%;
 }
 
+/* Content sits above the paper grain, so text stays crisp. */
+#root {
+  position: relative;
+  z-index: 1;
+}
+
 body {
   margin: 0;
   background:
@@ -100,7 +106,7 @@ html:not(.pill) body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 50;
+  z-index: 0;
   opacity: var(--grain-opacity);
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.45  0 0 0 0 0.4  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
@@ -202,9 +208,13 @@ html.pill #root {
   background: transparent;
 }
 
-/* Pill: tiny Joe stands on a soft contact shadow; the bubble is a small clay chip. */
-.pill-shadow {
-  background: radial-gradient(closest-side, rgba(40, 24, 18, 0.35), transparent);
+/* Pill: tiny Joe on a soft glow disc that keeps him readable over photos, code
+   and documents; the bubble is a small clay chip beside him. */
+.pill-glow {
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--surface) 96%, transparent) 62%, transparent);
+}
+html.pill .joe-waves path {
+  stroke-width: 7;
 }
 .pill-bubble {
   background: var(--surface);
@@ -213,4 +223,14 @@ html.pill #root {
     inset 0 1px 0 rgba(255, 255, 255, 0.55),
     0 6px 18px rgba(60, 30, 20, 0.22),
     0 1px 2px rgba(60, 30, 20, 0.2);
+}
+
+/* Try it here: the practice box gets the red focus ring from the mockup. */
+.practice-box {
+  box-shadow: inset 0 2px 4px var(--clay-shade);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.practice-box:focus-within {
+  border: 1px solid var(--accent);
+  box-shadow: inset 0 2px 4px var(--clay-shade), 0 0 0 4px var(--accent-soft);
 }

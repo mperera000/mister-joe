@@ -1,7 +1,7 @@
 import { Check, Copy, FolderOpen, MagnifyingGlass, Sparkle, Trash } from "@phosphor-icons/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MisterJoe } from "../components/MisterJoe";
-import { Button, IconButton } from "../components/ui";
+import { Button } from "../components/ui";
 import { backend } from "../lib/backend";
 import { hotkeyName } from "../lib/process";
 import { useApp } from "../lib/store";
@@ -24,6 +24,10 @@ export function HistoryScreen() {
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Delete is instant on screen, with an Undo toast; the file goes after 6 s.
+  const [pending, setPending] = useState<Entry | null>(null);
+  const pendingTimer = useRef<number | undefined>(undefined);
+  const pendingRef = useRef<Entry | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -40,10 +44,18 @@ export function HistoryScreen() {
     return () => off?.();
   }, [load]);
 
+  useEffect(
+    () => () => {
+      window.clearTimeout(pendingTimer.current);
+      if (pendingRef.current) void backend.deleteEntry(pendingRef.current.id);
+    },
+    [],
+  );
+
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (entries ?? []).filter((e) => !q || e.text.toLowerCase().includes(q));
-  }, [entries, query]);
+    return (entries ?? []).filter((e) => e.id !== pending?.id && (!q || e.text.toLowerCase().includes(q)));
+  }, [entries, query, pending]);
 
   if (!boot || !settings) return null;
 
@@ -53,13 +65,31 @@ export function HistoryScreen() {
     setTimeout(() => setCopiedId(null), 1500);
   }
 
-  async function remove(e: Entry) {
+  async function commitDelete(e: Entry) {
     try {
       await backend.deleteEntry(e.id);
-      setEntries((list) => list?.filter((x) => x.id !== e.id) ?? null);
     } catch (error) {
       setErr(String(error));
+      void load();
     }
+  }
+
+  function remove(e: Entry) {
+    if (pendingRef.current) void commitDelete(pendingRef.current);
+    window.clearTimeout(pendingTimer.current);
+    pendingRef.current = e;
+    setPending(e);
+    pendingTimer.current = window.setTimeout(() => {
+      if (pendingRef.current) void commitDelete(pendingRef.current);
+      pendingRef.current = null;
+      setPending(null);
+    }, 6000);
+  }
+
+  function undo() {
+    window.clearTimeout(pendingTimer.current);
+    pendingRef.current = null;
+    setPending(null);
   }
 
   return (
@@ -89,7 +119,7 @@ export function HistoryScreen() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search what you said"
-          className="h-11 w-full rounded-[10px] border border-line bg-surface pr-3 pl-10 text-[15px] placeholder:text-muted focus:border-accent focus:outline-none"
+          className="h-11 w-full rounded-[10px] border border-line bg-surface pr-3 pl-10 text-[15px] placeholder:text-muted focus:border-accent focus:outline-none clay-well"
         />
       </div>
 
@@ -132,17 +162,29 @@ export function HistoryScreen() {
                 </div>
                 <p className="selectable mt-1.5 line-clamp-3 whitespace-pre-wrap text-[15.5px] leading-relaxed">{e.text}</p>
               </div>
-              <div className="flex shrink-0 items-start gap-1 opacity-70 transition group-hover:opacity-100">
-                <IconButton label={copiedId === e.id ? "Copied" : "Copy text"} onClick={() => copy(e)}>
-                  {copiedId === e.id ? <Check size={18} /> : <Copy size={18} />}
-                </IconButton>
-                <IconButton label="Delete this dictation" onClick={() => remove(e)}>
-                  <Trash size={18} />
-                </IconButton>
+              <div className="flex shrink-0 items-start gap-1.5">
+                <Button className="h-9 px-3.5 text-[14px]" icon={copiedId === e.id ? <Check size={15} /> : <Copy size={15} />} onClick={() => copy(e)}>
+                  {copiedId === e.id ? "Copied" : "Copy"}
+                </Button>
+                <Button variant="danger" className="h-9 px-3.5 text-[14px]" icon={<Trash size={15} />} onClick={() => remove(e)}>
+                  Delete
+                </Button>
               </div>
             </li>
           ))}
         </ul>
+      )}
+
+      {pending && (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3.5 rounded-full bg-ink py-2 pr-2 pl-5 text-[14.5px] text-bg shadow-[0_10px_26px_-8px_rgba(42,33,28,0.45)]"
+        >
+          <span className="max-w-[44ch] truncate">Deleted "{pending.text.slice(0, 40)}{pending.text.length > 40 ? "…" : ""}"</span>
+          <button type="button" onClick={undo} className="h-8 rounded-full bg-accent px-3.5 font-extrabold text-on-accent">
+            Undo
+          </button>
+        </div>
       )}
     </div>
   );

@@ -55,6 +55,25 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
     return () => offs.forEach((p) => void p.then((off) => off()));
   }, []);
 
+  // Finished states fade back to the hint after 5 s, or when you click back into the box.
+  const statusTimer = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    window.clearTimeout(statusTimer.current);
+    if (phase === "done" || phase === "nothing" || phase === "error" || phase === "copied" || optionMissed) {
+      statusTimer.current = window.setTimeout(() => {
+        setPhase("idle");
+        setOptionMissed(false);
+      }, 5000);
+    }
+    return () => window.clearTimeout(statusTimer.current);
+  }, [phase, optionMissed]);
+  function resetStatus() {
+    if (phase !== "listening" && phase !== "thinking") {
+      setPhase("idle");
+      setOptionMissed(false);
+    }
+  }
+
   // The first successful dictation means setup is done.
   useEffect(() => {
     if (phase === "done" && settings && !settings.onboarded) void updateSettings({ onboarded: true });
@@ -121,60 +140,60 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-[auto_1fr] items-center gap-8">
+    <div className="space-y-7">
+      <section aria-labelledby="home-title" className="grid grid-cols-[200px_minmax(0,1fr)] items-center gap-8">
         <div className="flex flex-col items-center">
-          <MisterJoe mood={mood} size={168} ear={phase === "listening" ? (side ?? "left") : null} level={level} />
+          <MisterJoe mood={mood} size={176} ear={phase === "listening" ? (side ?? "left") : null} level={level} />
           <span aria-hidden className="joe-floor -mt-2 h-4 w-32 rounded-[50%]" />
         </div>
-        <div>
-          <h1 className="text-[34px] font-extrabold leading-[1.08] tracking-tight">
+        <div className="flex min-w-0 flex-col gap-3">
+          <h1 id="home-title" className="text-[30px] font-extrabold leading-[1.1] tracking-tight">
             {settings.mode === "toggle" ? `Tap ${key}, talk, tap again.` : `Hold ${key} and talk.`}
           </h1>
-          <p className="mt-3 max-w-[44ch] text-[16px] leading-relaxed text-muted">
-            Joe types it wherever your cursor is. Your voice never leaves this computer.
-          </p>
-          {!isApp && (
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              <Button variant="primary" icon={<Play size={17} weight="fill" />} onClick={trySample} disabled={busy !== null}>
-                {busy === "sample" ? "Joe is listening..." : "Try a sample"}
-              </Button>
-            </div>
+          {isApp ? (
+            <>
+              <p className="text-[15.5px] leading-relaxed text-muted">
+                Click the box, hold <Kbd>{key}</Kbd>, say a sentence, let go. It works the same in any app.
+              </p>
+              <div className="practice-box rounded-[14px] border border-line bg-surface px-4 pt-3.5 pb-3">
+                <textarea
+                  data-testid="practice-box"
+                  aria-label="Practice box"
+                  value={practice}
+                  onChange={(e) => setPractice(e.target.value)}
+                  onKeyDown={onPracticeKeyDown}
+                  onKeyUp={onPracticeKeyUp}
+                  onFocus={resetStatus}
+                  rows={2}
+                  placeholder={`Click here, then hold ${key} and talk`}
+                  className="w-full resize-none border-0 bg-transparent p-0 text-[17px] leading-relaxed text-ink outline-none placeholder:text-muted"
+                />
+                <div aria-live="polite" className="mt-2 flex min-h-7 items-center border-t border-line pt-2.5 text-[14.5px]">
+                  <PracticeStatus
+                    phase={phase}
+                    message={phaseMsg}
+                    level={level}
+                    keyName={key}
+                    optionMissed={optionMissed}
+                    onOpenSettings={(which) => void backend.openPermissionSettings(which)}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-[15.5px] leading-relaxed text-muted">
+                Joe types it wherever your cursor is. Your voice never leaves this computer.
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <Button variant="primary" icon={<Play size={17} weight="fill" />} onClick={trySample} disabled={busy !== null}>
+                  {busy === "sample" ? "Joe is listening..." : "Try a sample"}
+                </Button>
+              </div>
+            </>
           )}
         </div>
-      </div>
-
-      {isApp && (
-        <section aria-labelledby="practice-title" className="clay border border-line bg-surface p-5">
-          <h2 id="practice-title" className="text-[19px] font-bold tracking-tight">
-            Try it here
-          </h2>
-          <p className="mt-1 text-[14.5px] leading-relaxed text-muted">
-            Click the box, hold <Kbd>{key}</Kbd>, say a sentence, then let go. It works the same in any app.
-          </p>
-          <textarea
-            data-testid="practice-box"
-            aria-label="Practice box"
-            value={practice}
-            onChange={(e) => setPractice(e.target.value)}
-            onKeyDown={onPracticeKeyDown}
-            onKeyUp={onPracticeKeyUp}
-            rows={3}
-            placeholder={`Click here, then hold ${key} and talk`}
-            className="clay-well mt-3 w-full resize-none rounded-[12px] border border-line bg-bg px-3.5 py-3 text-[16px] leading-relaxed outline-none focus:border-accent"
-          />
-          <div aria-live="polite" className="mt-2 min-h-6 text-[14.5px]">
-            <PracticeStatus
-              phase={phase}
-              message={phaseMsg}
-              level={level}
-              keyName={key}
-              optionMissed={optionMissed}
-              onOpenSettings={(which) => void backend.openPermissionSettings(which)}
-            />
-          </div>
-        </section>
-      )}
+      </section>
 
       {err && (
         <div role="alert" className="flex items-start gap-3 rounded-2xl bg-accent-soft px-4 py-3 text-[15px] text-accent-ink">
@@ -257,7 +276,7 @@ export function HomeScreen({ onOpenSettings, onOpenHistory }: { onOpenSettings: 
         </div>
       )}
 
-      <dl className="grid grid-cols-3 gap-6 border-t border-line pt-6">
+      <dl className="grid grid-cols-3 gap-4">
         <Fact label="Speech engine" value={boot.engineReady ? boot.modelLabel : "Getting ready..."} />
         <Fact
           label="Leaves this computer"
@@ -293,50 +312,60 @@ function PracticeStatus({
   optionMissed: boolean;
   onOpenSettings: (which: "accessibility" | "microphone") => void;
 }) {
-  const fix = (which: "accessibility" | "microphone", label: string) => (
-    <button type="button" className="ml-1 font-semibold text-accent-ink hover:underline" onClick={() => onOpenSettings(which)}>
-      {label}
-    </button>
+  // One style for every problem: warning icon, bold red text, one action.
+  const problem = (title: string, detail?: string, fix?: { which: "accessibility" | "microphone"; label: string }) => (
+    <span className="flex w-full items-center gap-2">
+      <Warning size={16} weight="fill" className="shrink-0 text-accent" />
+      <span className="font-bold text-accent-ink">{title}</span>
+      {detail && <span className="truncate text-muted">{detail}</span>}
+      {fix && (
+        <button type="button" className="ml-auto shrink-0 font-bold text-accent-ink hover:underline" onClick={() => onOpenSettings(fix.which)}>
+          {fix.label}
+        </button>
+      )}
+    </span>
   );
   if (phase === "listening") {
     return (
-      <div className="flex items-center gap-3">
-        <span className="font-semibold">Listening. Let go of {keyName} when you're done.</span>
-        <LevelMeter level={level} />
-      </div>
+      <span className="flex w-full items-center gap-2.5">
+        <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_0_4px_var(--accent-soft)]" />
+        <span className="font-bold">Listening</span>
+        <span className="text-muted">Let go of {keyName} when you're done</span>
+        <span className="ml-auto">
+          <LevelMeter level={level} />
+        </span>
+      </span>
     );
   }
   if (phase === "thinking") return <span className="text-muted">Writing it down...</span>;
   if (phase === "error") {
     const mic = /hear|microphone/i.test(message ?? "");
-    return (
-      <span className="text-accent-ink">
-        {message ?? "Something went wrong."}
-        {mic && fix("microphone", "Open Microphone settings")}
-      </span>
-    );
+    return mic
+      ? problem("Joe can't hear you.", undefined, { which: "microphone", label: "Open Microphone settings" })
+      : problem(message ?? "Something went wrong.");
   }
-  if (optionMissed) {
-    return (
-      <span className="text-accent-ink">
-        Joe didn't notice {keyName}. Switch on Mister Joe in Privacy &amp; Security &gt; Accessibility.
-        {fix("accessibility", "Open Accessibility settings")}
-      </span>
-    );
-  }
-  if (phase === "nothing") return <span className="text-muted">Joe didn't catch any words. Hold {keyName} a little longer and speak up.</span>;
+  if (optionMissed) return problem(`Joe didn't notice ${keyName}.`, undefined, { which: "accessibility", label: "Open Accessibility" });
+  if (phase === "nothing") return problem("Didn't catch any words.", `Hold ${keyName} a little longer.`);
   if (phase === "copied") return <span className="text-muted">{message}</span>;
-  if (phase === "done") return <span className="font-semibold text-ok">That's it. Joe works the same way in any app.</span>;
+  if (phase === "done") {
+    return (
+      <span className="flex items-center gap-2">
+        <Check size={16} weight="bold" className="text-ok" />
+        <span className="font-bold text-ok">Typed it.</span>
+        <span className="text-muted">Joe works the same in any app.</span>
+      </span>
+    );
+  }
   return <span className="text-muted">Joe will type your words into the box.</span>;
 }
 
 function LevelMeter({ level }: { level: number }) {
   const bars = 14;
   return (
-    <div aria-label="Microphone level" className="flex h-5 items-end gap-1">
+    <div aria-label="Microphone level" className="flex h-5 items-end gap-[3px]">
       {Array.from({ length: bars }, (_, i) => {
         const on = level * bars > i;
-        return <span key={i} className={`w-1.5 rounded-full transition-all duration-75 ${on ? "bg-accent" : "bg-line"}`} style={{ height: `${30 + (i % 5) * 14}%` }} />;
+        return <span key={i} className={`w-1 rounded-full transition-all duration-75 ${on ? "bg-accent" : "bg-line"}`} style={{ height: `${30 + (i % 5) * 14}%` }} />;
       })}
     </div>
   );
@@ -365,13 +394,15 @@ function SetupStep({ done, title, body, action }: { done: boolean; title: string
 
 function Fact({ label, value, icon, action }: { label: string; value: string; icon?: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div>
+    <div className="clay border border-line bg-surface px-4.5 py-4">
       <dt className="text-[13px] font-semibold text-muted">{label}</dt>
-      <dd className="mt-1 flex items-center gap-1.5 font-semibold">
-        {icon}
-        {value}
+      <dd className="mt-1 flex items-center justify-between gap-2 font-bold">
+        <span className="flex items-center gap-1.5">
+          {icon}
+          {value}
+        </span>
+        {action}
       </dd>
-      {action && <dd className="mt-1">{action}</dd>}
     </div>
   );
 }
