@@ -137,8 +137,35 @@ fn request_microphone() {
     }
 }
 
-/// Accessibility is usually granted while Joe is open. Watch for it, then start the
-/// Option-key listener and tell the screens, so nobody has to restart the app.
+/// Leave without running C++ cleanup: whisper.cpp's Metal backend aborts in it,
+/// which made macOS report a crash on every quit.
+fn hard_exit() -> ! {
+    extern "C" {
+        fn _exit(code: i32) -> !;
+    }
+    unsafe { _exit(0) }
+}
+
+/// Start a fresh copy of Joe, then quit this one. Reopens the .app bundle a moment
+/// later so the single-instance check doesn't see this copy still running.
+fn relaunch() -> ! {
+    #[cfg(target_os = "macos")]
+    if let Some(bundle) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.ancestors().nth(3).map(|p| p.to_path_buf()))
+        .filter(|p| p.extension().is_some_and(|e| e == "app"))
+    {
+        let _ = std::process::Command::new("/bin/sh")
+            .arg("-c")
+            .arg("sleep 1; open \"$0\"")
+            .arg(bundle)
+            .spawn();
+    }
+    hard_exit()
+}
+
+/// Accessibility is usually granted while Joe is open. Watch for it, then relaunch
+/// Joe so the Option-key listener works, without the user restarting it by hand.
 fn watch_accessibility(app: &AppHandle) {
     if accessibility_granted() {
         return;
@@ -150,9 +177,12 @@ fn watch_accessibility(app: &AppHandle) {
     thread::spawn(move || loop {
         thread::sleep(Duration::from_millis(1500));
         if accessibility_granted() {
-            start_hotkey(&app);
+            // A keyboard tap created by a process that started without Accessibility
+            // stays deaf even after the grant (Momito notes the same), so relaunch
+            // Joe once; the fresh process starts the Option key normally.
             let _ = app.emit("joe://permissions", true);
-            break;
+            thread::sleep(Duration::from_millis(400));
+            relaunch();
         }
     });
 }
@@ -744,13 +774,8 @@ pub fn run() {
         .expect("error while running Mister Joe")
         .run(|_app, event| {
             if let tauri::RunEvent::Exit = event {
-                // whisper.cpp's Metal backend aborts in its cleanup code at exit, which
-                // made macOS show "Mister Joe quit unexpectedly" on every quit. Settings
-                // and history are already on disk, so leave without that cleanup.
-                extern "C" {
-                    fn _exit(code: i32) -> !;
-                }
-                unsafe { _exit(0) }
+                // Settings and history are already on disk.
+                hard_exit();
             }
         });
 }
