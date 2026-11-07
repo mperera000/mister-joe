@@ -6,6 +6,9 @@ use std::sync::{Mutex, OnceLock};
 use std::thread;
 use std::time::Duration;
 
+/// How long to leave the dictation on the clipboard after pressing paste.
+const RESTORE_DELAY: Duration = Duration::from_millis(1000);
+
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Outcome {
@@ -43,15 +46,22 @@ pub fn deliver(text: &str, auto_paste: bool, restore: bool) -> Result<Outcome, S
     }
     let previous = if restore { clipboard()?.lock().unwrap().get_text().ok() } else { None };
     copy(text)?;
-    thread::sleep(Duration::from_millis(40));
+    thread::sleep(Duration::from_millis(60));
     if let Err(e) = press_paste() {
         log::warn!("paste keystroke failed: {e}");
         return Ok(Outcome::Copied);
     }
     if let Some(prev) = previous {
-        // Give the target app time to read the clipboard before restoring it.
-        thread::sleep(Duration::from_millis(350));
-        let _ = clipboard()?.lock().unwrap().set_text(prev);
+        // Give the target app time to read the clipboard before restoring it. Apps read
+        // a paste asynchronously (web views especially); 350 ms was too short and the
+        // old clipboard got pasted instead of the dictation.
+        thread::sleep(RESTORE_DELAY);
+        let mut cb = clipboard()?.lock().unwrap();
+        // Only put the old clipboard back if Joe's text is still there, so nothing the
+        // user copied in the meantime gets overwritten.
+        if cb.get_text().ok().as_deref() == Some(text) {
+            let _ = cb.set_text(prev);
+        }
     }
     Ok(Outcome::Pasted)
 }

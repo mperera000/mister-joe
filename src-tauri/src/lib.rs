@@ -532,9 +532,13 @@ fn save_entry(
     save_to_history(&app, &s, &text, duration_seconds, &model, polished, &source)
 }
 
+/// Async so it runs off the main thread: pasting waits for the target app to read the
+/// clipboard, and blocking the main thread kept Joe's own window from reading it.
 #[tauri::command]
-fn finalize_dictation(app: AppHandle, id: u64, text: String, polished: bool) -> Result<Option<history::Entry>, String> {
-    finalize(&app, id, text, polished)
+async fn finalize_dictation(app: AppHandle, id: u64, text: String, polished: bool) -> Result<Option<history::Entry>, String> {
+    tauri::async_runtime::spawn_blocking(move || finalize(&app, id, text, polished))
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]

@@ -1,6 +1,6 @@
 [package]
 name = "mister-joe"
-version = "0.1.4"
+version = "0.1.5"
 description = "Mister Joe: dictation that stays on your device"
 authors = ["Mister Joe"]
 license = "MIT"
