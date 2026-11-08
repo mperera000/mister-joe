@@ -263,26 +263,35 @@ fn show_pill(app: &AppHandle) {
 }
 
 /// macOS keeps ordinary windows off other apps' full-screen spaces, so the pill
-/// vanished over full-screen apps (Joe still recorded). Make it an overlay that
-/// joins every space, full-screen ones included, at the status-bar level. Briefly
-/// switching Joe to a background app and back registers that with the window
-/// server (the same trick Electron uses for visibleOnFullScreen).
+/// vanished over full-screen apps (Joe still recorded). Turn it into a
+/// non-activating panel, the window type macOS's own overlays use (and what
+/// tauri-nspanel does): it joins every space, full-screen ones included, floats at
+/// the status-bar level and never steals focus from the app you're typing in.
+/// Runs once in setup, on the main thread.
 #[cfg(target_os = "macos")]
 fn float_pill_over_fullscreen(app: &tauri::App) {
-    use objc2::{msg_send, runtime::AnyObject};
+    use objc2::runtime::{AnyClass, AnyObject, Bool};
+    use objc2::msg_send;
+    extern "C" {
+        fn object_setClass(obj: *mut AnyObject, cls: *const AnyClass) -> *const AnyClass;
+    }
     let Some(pill) = app.get_webview_window("pill") else { return };
-    if let Ok(ptr) = pill.ns_window() {
-        let w = ptr as *mut AnyObject;
+    let Ok(ptr) = pill.ns_window() else { return };
+    let Some(panel_class) = AnyClass::get(c"NSPanel") else { return };
+    let w = ptr as *mut AnyObject;
+    unsafe {
+        object_setClass(w, panel_class);
+        // NSWindowStyleMaskNonactivatingPanel
+        let mask: usize = msg_send![w, styleMask];
+        let _: () = msg_send![w, setStyleMask: mask | (1 << 7)];
+        let _: () = msg_send![w, setFloatingPanel: Bool::YES];
+        let _: () = msg_send![w, setBecomesKeyOnlyIfNeeded: Bool::YES];
+        let _: () = msg_send![w, setHidesOnDeactivate: Bool::NO];
         // canJoinAllSpaces | stationary | ignoresCycle | fullScreenAuxiliary
         let behavior: usize = (1 << 0) | (1 << 4) | (1 << 6) | (1 << 8);
-        unsafe {
-            let _: () = msg_send![w, setCollectionBehavior: behavior];
-            let _: () = msg_send![w, setLevel: 25isize]; // NSStatusWindowLevel
-            let _: () = msg_send![w, setHidesOnDeactivate: false];
-        }
+        let _: () = msg_send![w, setCollectionBehavior: behavior];
+        let _: () = msg_send![w, setLevel: 25isize]; // NSStatusWindowLevel
     }
-    let _ = app.handle().set_activation_policy(tauri::ActivationPolicy::Accessory);
-    let _ = app.handle().set_activation_policy(tauri::ActivationPolicy::Regular);
 }
 
 fn hide_pill_after(app: &AppHandle, ms: u64) {
