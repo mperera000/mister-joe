@@ -244,6 +244,38 @@ fn show_pill(app: &AppHandle) {
     // Clicks pass straight through to whatever is underneath the pill.
     let _ = pill.set_ignore_cursor_events(true);
     let _ = pill.show();
+    // Bring it forward even while another app (possibly full screen) is active.
+    #[cfg(target_os = "macos")]
+    if let Ok(ptr) = pill.ns_window() {
+        use objc2::{msg_send, runtime::AnyObject};
+        let w = ptr as *mut AnyObject;
+        unsafe {
+            let _: () = msg_send![w, orderFrontRegardless];
+        }
+    }
+}
+
+/// macOS keeps ordinary windows off other apps' full-screen spaces, so the pill
+/// vanished over full-screen apps (Joe still recorded). Make it an overlay that
+/// joins every space, full-screen ones included, at the status-bar level. Briefly
+/// switching Joe to a background app and back registers that with the window
+/// server (the same trick Electron uses for visibleOnFullScreen).
+#[cfg(target_os = "macos")]
+fn float_pill_over_fullscreen(app: &tauri::App) {
+    use objc2::{msg_send, runtime::AnyObject};
+    let Some(pill) = app.get_webview_window("pill") else { return };
+    if let Ok(ptr) = pill.ns_window() {
+        let w = ptr as *mut AnyObject;
+        // canJoinAllSpaces | stationary | ignoresCycle | fullScreenAuxiliary
+        let behavior: usize = (1 << 0) | (1 << 4) | (1 << 6) | (1 << 8);
+        unsafe {
+            let _: () = msg_send![w, setCollectionBehavior: behavior];
+            let _: () = msg_send![w, setLevel: 25isize]; // NSStatusWindowLevel
+            let _: () = msg_send![w, setHidesOnDeactivate: false];
+        }
+    }
+    let _ = app.handle().set_activation_policy(tauri::ActivationPolicy::Accessory);
+    let _ = app.handle().set_activation_policy(tauri::ActivationPolicy::Regular);
 }
 
 fn hide_pill_after(app: &AppHandle, ms: u64) {
@@ -737,6 +769,8 @@ pub fn run() {
                 hotkey_error: Mutex::new(None),
             });
             build_tray(app)?;
+            #[cfg(target_os = "macos")]
+            float_pill_over_fullscreen(app);
             start_hotkey(app.handle());
             watch_accessibility(app.handle());
             #[cfg(target_os = "macos")]
