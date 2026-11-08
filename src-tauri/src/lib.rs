@@ -245,13 +245,20 @@ fn show_pill(app: &AppHandle) {
     let _ = pill.set_ignore_cursor_events(true);
     let _ = pill.show();
     // Bring it forward even while another app (possibly full screen) is active.
+    // show_pill runs on the hotkey thread, and AppKit window calls must happen on
+    // the main thread (calling it here directly crashed 0.1.8), so hop over first.
     #[cfg(target_os = "macos")]
-    if let Ok(ptr) = pill.ns_window() {
-        use objc2::{msg_send, runtime::AnyObject};
-        let w = ptr as *mut AnyObject;
-        unsafe {
-            let _: () = msg_send![w, orderFrontRegardless];
-        }
+    {
+        let pill = pill.clone();
+        let _ = app.run_on_main_thread(move || {
+            if let Ok(ptr) = pill.ns_window() {
+                use objc2::{msg_send, runtime::AnyObject};
+                let w = ptr as *mut AnyObject;
+                unsafe {
+                    let _: () = msg_send![w, orderFrontRegardless];
+                }
+            }
+        });
     }
 }
 
